@@ -1,0 +1,16 @@
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
+
+# ---- Editors / IDEs ----
+.vscode/
+.idea/
+*.iml
+
+# ---- Java build output (we’ll add Maven/Gradle soon) ----
+target/
+build/
+out/
+
+# ---- Logs ----
+*.log
