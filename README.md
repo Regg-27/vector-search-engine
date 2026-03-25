@@ -15,3 +15,5 @@ Goal: Learn vector similarity search by building it from scratch.
 
 ## Progress
 Day 1: repo setup
+Day 2: implemented vector math utilities (dot product, cosine similarity, L2 distance) with unit tests
+Day 3: implemented BruteForceIndex with top-k heap search and unit tests
