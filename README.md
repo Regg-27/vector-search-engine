@@ -18,3 +18,4 @@ Day 1: repo setup
 Day 2: implemented vector math utilities (dot product, cosine similarity, L2 distance) with unit tests
 Day 3: implemented BruteForceIndex with top-k heap search and unit tests
 Day 4: implemented CLI with functional add, search, and exit options
+Day 5: implemented time benchmark for search results in milliseconds
