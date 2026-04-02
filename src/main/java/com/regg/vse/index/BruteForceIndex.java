@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
-public class BruteForceIndex {
+public class BruteForceIndex implements VectorIndex {
     private List<Integer> ids = new ArrayList<>();
     private List<float[]> vectors = new ArrayList<>();
 

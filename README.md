@@ -20,9 +20,11 @@ Day 3: implemented BruteForceIndex with top-k heap search and unit tests
 Day 4: implemented CLI with functional add, search, and exit options
 Day 5: implemented time benchmark for search results in milliseconds
 Day 6: implemented recall@k evaluator
+Day 7: implemented optimized index search, updated recall@k, added VectorIndex interface
+
 
 ## Notes: Future implementations
 - exploring more efficient search algorithms for the index (local beam, hill-climbing, A*, other AI related search algorithms)
 - reading from files
 - adding a remove from index feature
-- 
+- refactor reused logic to their own methods
