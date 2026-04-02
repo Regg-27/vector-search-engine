@@ -22,7 +22,8 @@ Day 5: implemented time benchmark for search results in milliseconds
 Day 6: implemented recall@k evaluator
 Day 7: implemented optimized index search, updated recall@k, added VectorIndex interface
 Day 8: implemented parameter tuner for IVFIndex
-
+Day 9: updated SearchBenchmark to account for JVM warmup
+Day 10: 
 
 ## Notes: Future implementations
 - exploring more efficient search algorithms for the index (local beam, hill-climbing, A*, other AI related search algorithms)

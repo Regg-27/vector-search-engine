@@ -32,13 +32,21 @@ public class SearchBenchmark {
         for ( int i = 0; i < dimensions; i++) {
             query[i] = (float)Math.random();
         }
-        long preSearch = System.nanoTime();
-        List<BruteForceIndex.SearchResult> result = index.search(query, 10);
-        long postSearch = System.nanoTime();
-        long timeDifference = postSearch - preSearch;
-        long differenceInMS = timeDifference/1000000;
+
+        for (int i = 0; i < 10; i++) {
+            index.search(query, 10);
+        }
+
+        long totalTime = 0;
+        for (int i = 0; i < 20; i++) {
+            long start = System.nanoTime();
+            index.search(query, 10);
+            long end = System.nanoTime();
+            totalTime += (end - start);
+        }
+        long averageTimeMs = (totalTime/20) / 1000000;
         System.out.println("Vectors searched: " + numVectors);
-        System.out.println("Time spent searching: " + differenceInMS + "ms");
+        System.out.println("Average time spent searching: " + averageTimeMs + "ms");
     }
 
     public static void main(String[] args) {
