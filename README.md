@@ -21,6 +21,7 @@ Day 4: implemented CLI with functional add, search, and exit options
 Day 5: implemented time benchmark for search results in milliseconds
 Day 6: implemented recall@k evaluator
 Day 7: implemented optimized index search, updated recall@k, added VectorIndex interface
+Day 8: implemented parameter tuner for IVFIndex
 
 
 ## Notes: Future implementations
