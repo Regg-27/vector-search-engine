@@ -29,6 +29,7 @@ not directly relate or interact with each other. It also gave me an opportunity 
 project structure promoting clarity and tidiness.
 
 ### Package Structure
+```
 vector-search-engine/
 ├── docs/
 │   ├── design.md
@@ -56,6 +57,7 @@ vector-search-engine/
 │       └── index/
 │           └── BruteForceIndexTest.java
 └── pom.xml
+```
 
 ---
 
