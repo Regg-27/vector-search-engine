@@ -1,32 +1,45 @@
 # Vector Search Engine
+A vector similarity search engine built from scratch in Java, featuring brute-force and IVF-based approximate nearest neighbor search with benchmarking and recall evaluation.
+
+---
 
 ## Overview
-A vector similarity search engine built from scratch in Java, featuring brute-force and IVF-based
-approximate nearest neighbor search with benchmarking and recall evaluation.
+This engine indexes high-dimensional float vectors and retrieves the top-k most similar results for a given query using cosine similarity and L2 distance. Two indexing strategies are implemented: a brute-force linear scan as the correctness baseline, and an IVF (Inverted File Index) that clusters vectors at index time to narrow the search space at query time. A benchmarking layer measures search latency across dataset sizes, and a recall evaluator compares IVF accuracy against brute-force ground truth — exposing the speed/accuracy tradeoff directly.
 
 ---
 
 ## Motivation
-This project was built as a structured introduction to systems programming, using vector search as a vehicle to apply
-concepts from a Numerical Methods and Computing course. The goal was to reinforce core Java fundamentals —
-data structures, algorithm design, and performance measurement — while building something non-trivial from scratch.
-Vector search was chosen deliberately: it sits at the intersection of algorithms and machine learning infrastructure,
-making it both technically educational and relevant to modern software engineering.
+Vector search is the infrastructure behind semantic search, recommendation systems, and RAG pipelines — anywhere you need to find "things similar to this" across large datasets. Most engineers use it as a black box through libraries like FAISS or Pinecone. Building it from scratch means understanding why approximate search exists, what clustering actually does to search behavior, and where the speed/accuracy tradeoff comes from. The recall evaluation table below makes that tradeoff concrete: more clusters means faster search but lower accuracy, because correct results increasingly end up in unselected clusters.
+
+---
+
+## Benchmark Results
+
+Brute-force search, averaged over 20 runs with 10 JVM warmup runs:
+
+| Vectors   | Avg Search Time |
+|-----------|----------------|
+| 1,000     | 0 ms           |
+| 10,000    | 2 ms           |
+| 100,000   | 39 ms          |
+
+IVF recall vs. speed at 100k vectors (Recall@25):
+
+| numClusters | Recall@25  | Avg Search Time |
+|-------------|------------|-----------------|
+| 2           | 0.88–1.0   | 16–28 ms        |
+| 5           | 0.44       | 1–2 ms          |
+| 50          | 0.32       | ~0 ms           |
+| 1000        | 0.04       | ~0 ms           |
+
+As clusters increase, each cluster shrinks — correct results end up in unselected clusters more often, dropping recall while search time falls.
 
 ---
 
 ## Architecture & Design
-This project is divided into 4 layers. The foundation being the math package where the basic mathematical methods live
-for vector computations. The next layer, index, depends on those math functions in order to store and search for vectors.
-This is where the issue arose of RecallEvaluator not knowing which index search function to use. To resolve that, the
-search method was put into the VectorIndex interface to be able to run both search methods from the two different index
-classes. Benchmark and recall require the index package to run performance and speed tests and return those results. The
-top-most layer being cli is where the user interacts with everything behind the system.
 
 ### Architectural Style
-The structure of this project mirrors a Model-View-Controller architecture style to keep classes separated if they do
-not directly relate or interact with each other. It also gave me an opportunity to experiment with a newly learned
-project structure promoting clarity and tidiness.
+Layered architecture loosely modeled on MVC — each package has a single responsibility and only depends on packages below it.
 
 ### Package Structure
 ```
@@ -34,75 +47,52 @@ vector-search-engine/
 ├── docs/
 │   ├── design.md
 │   └── learning_log.md
-├── data/
-├── bench/
-├── src/
-│   ├── main/java/com/regg/vse/
-│   │   ├── math/
-│   │   │   └── VectorMath.java
-│   │   ├── index/
-│   │   │   ├── VectorIndex.java
-│   │   │   ├── BruteForceIndex.java
-│   │   │   └── IVFIndex.java
-│   │   ├── benchmark/
-│   │   │   ├── SearchBenchmark.java
-│   │   │   └── ParameterTuner.java
-│   │   ├── recall/
-│   │   │   └── RecallEvaluator.java
-│   │   └── cli/
-│   │       └── SearchCLI.java
-│   └── test/java/com/regg/vse/
-│       ├── math/
-│       │   └── VectorMathTest.java
-│       └── index/
-│           └── BruteForceIndexTest.java
+├── src/main/java/vse/
+│   ├── math/
+│   │   └── VectorMath.java         # dot product, cosine similarity, L2 distance
+│   ├── index/
+│   │   ├── VectorIndex.java        # shared interface for all index types
+│   │   ├── BruteForceIndex.java    # linear scan baseline, top-k via min-heap
+│   │   └── IVFIndex.java          # cluster-based approximate search
+│   ├── benchmark/
+│   │   ├── SearchBenchmark.java    # latency measurement across dataset sizes
+│   │   └── ParameterTuner.java     # sweeps numClusters, records recall + speed
+│   ├── recall/
+│   │   └── RecallEvaluator.java    # compares IVF against brute-force ground truth
+│   └── cli/
+│       └── SearchCLI.java          # terminal interface for add/search
 └── pom.xml
 ```
 
----
+### Key Design Decisions
+- **Min-heap for top-k:** O(log k) insertion vs O(N log N) full sort — efficient for large N, small k
+- **VectorIndex interface:** allows BruteForceIndex and IVFIndex to be swapped in RecallEvaluator without changing evaluation logic
+- **BruteForce as ground truth:** acts as the control — recall is measured as the fraction of brute-force results the IVF index finds
+- **KD-Tree ruled out:** degrades in high dimensions (curse of dimensionality); IVF handles up to 128-dimensional vectors effectively
 
-## Benchmark Results
-Averaged over 20 runs with 10 warmup runs to account for JVM warmup.
-
-| Vectors | Avg Search Time |
-|---------|----------------|
-| 1,000 | 0ms |
-| 10,000 | 2ms |
-| 100,000 | 39ms |
-
----
-
-## Recall Evaluation
-As more clusters are created, search time decreases but recall drops — faster but less accurate,
-since correct results may end up in unselected clusters.
-
-| numClusters | Recall@25 | Avg Search Time |
-|-------------|-----------|-----------------|
-| 2 | 0.88 - 1.0 | 16-28ms |
-| 5 | 0.44 | 1-2ms |
-| 50 | 0.32 | ~0ms |
-| 1000 | 0.04 | ~0ms |
+### Known Limitations
+- Random centroid initialization can produce unbalanced clusters
+- IVF searches only the single nearest cluster — results in neighboring clusters are missed
+- All vectors are in-memory; nothing persists between sessions
 
 ---
 
 ## How to Run
+
 **Prerequisites:** Java 23, Maven
 
-- Run tests: `mvn test`
-- Run from IntelliJ: click the green play button next to any `main` method
-- Run CLI from terminal: `mvn exec:java -Dexec.mainClass="com.regg.vse.cli.SearchCLI"`
+```bash
+# Run tests
+mvn test
+
+# Run CLI
+mvn exec:java -Dexec.mainClass="vse.cli.SearchCLI"
+
+# Run benchmark
+mvn exec:java -Dexec.mainClass="vse.benchmark.SearchBenchmark"
+```
 
 ---
 
 ## What I Learned
-How Java functions and various DSA algorithms translate into a real project outside of coursework assignments.
-I also learned a lot about project structure from an architectural perspective, the importance of keeping package
-structure organized and neat for future refactoring and new implementations. Before this project, I did not consider
-much how important it is for the code to have a built-in way of measuring performance and speed. Most notably, the
-documentation process, both for my own personal reference and for others reviewing my code. Having a well-structured
-README and Design Doc for others and a Learning Log for me was a great addition and something I will be sure to keep
-doing for future personal projects. In terms of what I learned from the vector search engine itself, speed and accuracy
-tend to have a trade-off. Faster searching will often return less accurate results and in order to get higher accuracy,
-the search will be slower.
-
-
+Speed and accuracy have a fundamental tradeoff in approximate search — more clusters means faster queries but lower recall, because correct results increasingly land in unselected clusters. Building the recall evaluator made that tradeoff visible rather than theoretical. I also learned the value of measuring performance from day one: the JVM warmup effect (first runs are slow until the JIT compiler kicks in) only became obvious because the benchmark was there to show it. Project structure and documentation turned out to matter more than expected — having a design doc and learning log made it easier to pick up where I left off between sessions.
